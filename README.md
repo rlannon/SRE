@@ -6,6 +6,12 @@ The SIN runtime environment, intended for use with the [SINx86 compiler project]
 
 The aforementioned compiler for the SIN programming language (a custom procedural language) requires a fairly limited runtime library to enable all of the language's (safety) features. This is the library that implements them.
 
+## Overview of the SRE
+
+The SIN Runtime Environment (SRE) is the runtime library that provides support for many features of the SIN programming language. The compiler heavily relies on the SRE to perform tasks related to memory management, specifically resource allocation and release as well as memory copies and various other utility functions.
+
+This documentation is for the SRE only and assumes some level of knowledge with the SIN programming language and the compiler functionality. For more information on the SIN programming languages, see the [GitHub Pages site](rlannon.github.io/SIN).
+
 ## Getting Started
 
 ### Building the Library
