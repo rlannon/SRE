@@ -21,6 +21,10 @@ void mam::node::remove_ref() {
     }
 }
 
+uintptr_t mam::node::get_address() {
+    return this->address;
+}
+
 unsigned int mam::node::get_size() {
     return this->size;
 }
@@ -110,8 +114,8 @@ void mam::add_ref(uintptr_t key) {
     }
 }
 
-void mam::free(uintptr_t key) {
-    // decrease RC of the resource by one, erasing it if the RC hits 0
+void mam::free_resource(uintptr_t key) {
+    // decrease RC of the resource by one, freeing the memory and erasing the entry if the RC hits 0
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
         // if the resource could not be found, the manager should ignore it
@@ -120,6 +124,11 @@ void mam::free(uintptr_t key) {
         node *n = &it->second;
         n->remove_ref();
         if (n->get_rc() == 0) {
+            // free the allocated memory
+            void* ptr = (void*)it->first;
+            free(ptr);
+
+            // erase the entry from the MAM
             n = nullptr;
             it = this->resources.end();
             this->resources.erase(key);
@@ -166,10 +175,14 @@ unsigned int mam_get_rc(mam *m, uintptr_t address) {
     return m->find(address).get_rc();
 }
 
+unsigned int mam_get_size(mam *m, uintptr_t address) {
+    return m->find(address).get_size();
+}
+
 void mam_add_ref(mam *m, uintptr_t address) {
     m->add_ref(address);
 }
 
 void mam_free(mam *m, uintptr_t address) {
-    m->free(address);
+    m->free_resource(address);
 }
