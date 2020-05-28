@@ -35,6 +35,11 @@ bool sre_mam_contains(uintptr_t address) {
     return mam_contains(manager, address);
 }
 
+unsigned int sre_get_rc(uintptr_t address) {
+    // Returns the number of references to the given resource
+    return mam_get_rc(manager, address);
+}
+
 void sre_add_ref(uintptr_t address) {
     // Adds a reference to the resource at 'address'
     mam_add_ref(manager, address);

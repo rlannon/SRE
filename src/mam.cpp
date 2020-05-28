@@ -32,7 +32,7 @@ unsigned int mam::node::get_rc() {
 mam::node::node(uintptr_t address, size_t size) {
     this->address = address;
     this->size = size;
-    this->rc = 0;
+    this->rc = 1;   // For a node to be created, it must be referenced
 }
 
 mam::node::~node() {
@@ -43,6 +43,16 @@ mam::node::~node() {
 bool mam::contains(uintptr_t key) {
     // check to see whether the MAM contains a resource at the specified address
     return (bool)this->resources.count(key);
+}
+
+mam::node& mam::find(uintptr_t key) {
+    std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
+    if (it == this->resources.end()) {
+        std::cout << "Fatal: could not locate resource" << std::endl;
+        exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
+    }
+
+    return it->second;
 }
 
 uintptr_t mam::request_resource(size_t size) {
@@ -117,6 +127,15 @@ void mam::free(uintptr_t key) {
     }
 }
 
+// Constructor, destructor
+mam::mam() {
+
+}
+
+mam::~mam() {
+
+}
+
 // C wrappers
 mam* new_mam() {
     mam *addr;
@@ -141,6 +160,10 @@ bool mam_contains(mam *m, uintptr_t key) {
 
 uintptr_t mam_allocate(mam *m, size_t size) {
     return m->request_resource(size);
+}
+
+unsigned int mam_get_rc(mam *m, uintptr_t address) {
+    return m->find(address).get_rc();
 }
 
 void mam_add_ref(mam *m, uintptr_t address) {
