@@ -30,6 +30,11 @@ uintptr_t sre_request_resource(size_t size) {
     return mam_allocate(manager, size);
 }
 
+uintptr_t sre_reallocate(uintptr_t old_address, size_t new_size) {
+    // Reallocates the specified resource with the new size
+    return mam_reallocate(manager, old_address, new_size);
+}
+
 bool sre_mam_contains(uintptr_t address) {
     // Checks to see whether the MAM contains a resource beginning at the given address
     return mam_contains(manager, address);

@@ -77,6 +77,45 @@ uintptr_t mam::request_resource(size_t size) {
     return address;
 }
 
+uintptr_t mam::reallocate_resource(uintptr_t r, size_t new_size) {
+    /*
+
+    reallocate_resource
+
+    Reallocates the resource at 'r' with the size 'new_size'.
+    Note that if the new size is smaller than the old size, it may not actually perform a reallocation (to save memory fragmentation caused by continuous reallocations).
+    However, if the size is significantly smaller, the resource may be shrunk.
+
+    All of the data from the old location, if a reallocation occurs, is copied to the new location.
+
+    Note that if more than once reference to the resource exists, a reallocation will result in dangling pointers. The MAM keeps track of *how many* references to the resource exist, not *where* those resources are located.
+
+    */
+
+    uintptr_t new_address = 0;
+    node& old_resource = this->find(r);
+
+    // todo: consider if this is necessary
+    // warn the user on cerr if dangling references exist
+    if (old_resource.get_rc() > 1) {
+        std::cerr << "Note: references still exist to the resource." << std::endl;
+    }
+
+    if (old_resource.get_size() >= new_size) {
+        new_address = r;
+    } else {
+        new_address = this->request_resource(new_size);
+
+        // perform a memcpy from old to new
+        memcpy((void*)old_resource.get_address(), (void*)new_address, old_resource.get_size());
+
+        // erase the old resource
+        this->resources.erase(old_resource.get_address());
+    }
+
+    return new_address;
+}
+
 void mam::insert(uintptr_t address, size_t size) {
     // add the resource at 'address' to the table
     // first, ensure a resource at the address doesn't already exist
@@ -169,6 +208,10 @@ bool mam_contains(mam *m, uintptr_t key) {
 
 uintptr_t mam_allocate(mam *m, size_t size) {
     return m->request_resource(size);
+}
+
+uintptr_t mam_reallocate(mam *m, uintptr_t old_address, size_t new_size) {
+    return m->reallocate_resource(old_address, new_size);
 }
 
 uint32_t mam_get_rc(mam *m, uintptr_t address) {
