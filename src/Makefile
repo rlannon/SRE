@@ -1,16 +1,20 @@
 # Makefile
 # Builds the SRE
 
+# Assembly macros
 asm=nasm
-asm_flags=-f elf64
+asm_flags=-f elf64 -g
 
+# C macros
 cc=gcc
 cflags=-g
 
+# C++ macros
 cpp=g++
 cpp_version=c++17
 cppflags=-std=$(cpp_version) -g
 
+# General makefile macros
 target=sre.o
 
 asm_obj: memory.o string.o
