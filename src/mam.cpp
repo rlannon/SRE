@@ -21,14 +21,18 @@ void mam::node::remove_ref() {
     }
 }
 
+unsigned int mam::node::get_size() {
+    return this->size;
+}
+
 unsigned int mam::node::get_rc() {
     return this->rc;
 }
 
-mam::node::node(unsigned long address) {
+mam::node::node(uintptr_t address, size_t size) {
     this->address = address;
+    this->size = size;
     this->rc = 0;
-    this->freed = false;
 }
 
 mam::node::~node() {
@@ -36,17 +40,52 @@ mam::node::~node() {
 }
 
 // mam functions
-bool mam::contains(unsigned long key) {
-    // todo: check containment
+bool mam::contains(uintptr_t key) {
+    // check to see whether the MAM contains a resource at the specified address
+    return (bool)this->resources.count(key);
 }
 
-void mam::insert(unsigned long address) {
-    // todo: insert
+uintptr_t mam::request_resource(size_t size) {
+    // requests 'size' bytes from the OS, returning the address
+    // this automatically adds the resource to the table
+    uintptr_t address = 0;
+    void* ptr = malloc(size);
+
+    // make sure we got a valid address
+    if (ptr == NULL) {
+        std::cout << "Fatal: could not allocate resource" << std::endl;
+        exit(SRE_MAM_BAD_ALLOC);
+    } else {
+        address = reinterpret_cast<uintptr_t>(ptr);
+        this->insert(address, size);
+    }
+
+    return address;
 }
 
-void mam::add_ref(unsigned long key) {
+void mam::insert(uintptr_t address, size_t size) {
+    // add the resource at 'address' to the table
+    // first, ensure a resource at the address doesn't already exist
+    if (this->resources.count(address)) {
+        // todo: throw exception if resource already exists? update RC? try again?
+    } else {
+        try {
+            this->resources.insert(
+                std::make_pair<>(
+                    address,
+                    node(address, size)
+                )
+            );
+        } catch (std::exception& e) {
+            std::cout << "Fatal: An error occurred when adding a resource to the MAM table" << std::endl;
+            exit(SRE_MAM_OPERATION_ERROR);
+        }
+    }
+}
+
+void mam::add_ref(uintptr_t key) {
     // increment the RC of the resource by one
-    std::unordered_map<unsigned long, node>::iterator it = this->resources.find(key);
+    std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
         std::cout << "Fatal: Could not locate requested resource" << std::endl;
         exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
@@ -61,9 +100,9 @@ void mam::add_ref(unsigned long key) {
     }
 }
 
-void mam::free(unsigned long key) {
+void mam::free(uintptr_t key) {
     // decrease RC of the resource by one, erasing it if the RC hits 0
-    std::unordered_map<unsigned long, node>::iterator it = this->resources.find(key);
+    std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
         // if the resource could not be found, the manager should ignore it
         return;
@@ -96,18 +135,18 @@ void delete_mam(mam *m) {
     m = nullptr;
 }
 
-bool mam_contains(mam *m, unsigned long key) {
+bool mam_contains(mam *m, uintptr_t key) {
     return m->contains(key);
 }
 
-void mam_insert(mam *m, unsigned long address) {
-    m->insert(address);
+uintptr_t mam_allocate(mam *m, size_t size) {
+    return m->request_resource(size);
 }
 
-void mam_add_ref(mam *m, unsigned long address) {
+void mam_add_ref(mam *m, uintptr_t address) {
     m->add_ref(address);
 }
 
-void mam_free(mam *m, unsigned long address) {
+void mam_free(mam *m, uintptr_t address) {
     m->free(address);
 }
