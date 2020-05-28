@@ -14,20 +14,43 @@ Further, it handles all the interaction between the program and the OS, reducing
 #ifndef MAM_H
 #define MAM_H
 
-#include <stdbool.h>
-#include "set.h"
+#include <unordered_map>
+#include <iostream>
 
-// Define the MAM struct
-typedef struct mam {
-    // contains a hash table (more like a _set_) to store the addresses of memory obtained with malloc
-    set *s;
+#include "runtime_error_codes.h"
+
+class mam {
+    class node {
+        unsigned long address;
+        unsigned int rc;
+        bool freed;
+    public:
+        void add_ref();
+        void remove_ref();
+        unsigned int get_rc();
+
+        node(unsigned long address);
+        ~node();
+    };
+
+    std::unordered_map<unsigned long, node> resources;
+public:
+    bool contains(unsigned long key);
+    void insert(unsigned long address);
+
+    void add_ref(unsigned long key);
+    void free(unsigned long key);
+
+    mam();
+    ~mam();
 };
 
-// Initialization and clean-up routines
-void init_mam(mam *m);
-void clean_mam(mam *m);
-
-// Utility functions
-bool mam_contains(mam *m, unsigned int key);
+// C wrappers
+extern "C" mam* new_mam();
+extern "C" void delete_mam(mam *m);
+extern "C" bool mam_contains(mam *m, unsigned long key);
+extern "C" void mam_insert(mam *m, unsigned long address);
+extern "C" void mam_add_ref(mam *m, unsigned long address);
+extern "C" void mam_free(mam *m, unsigned long address);
 
 #endif
