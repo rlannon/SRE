@@ -15,20 +15,24 @@ cpp_version=c++17
 cppflags=-std=$(cpp_version) -g
 
 # General makefile macros
-target=sre.o
+target=test
 
 asm_obj=memory.o string.o
 mam_obj=mam.o
 sre_dependencies=sre.h runtime_error_codes.h $(asm_obj) $(mam_obj)
+test_dependencies=sre.o $(sre_dependencies)
 
 # The default build configuration
 default: $(target)
 
 # Whole build config
-$(target): $(sre_dependencies)
+$(target): $(test_dependencies)
 	@echo "Building SRE..."
-	$(cc) $(cflags) -o $@ -c sre.c
+	$(cpp) $(cppflags) -o $@ main.cpp $^
 	@echo "Build successful."
+
+sre.o: $(sre_dependencies)
+	$(cc) $(cflags) -o sre.o -c sre.c
 
 mam.o: mam.h mam.cpp runtime_error_codes.h
 	$(cpp) $(cppflags) -o mam.o -c mam.cpp
