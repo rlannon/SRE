@@ -13,6 +13,7 @@ Much of the assembly present in the runtime environment and standard library is 
 #ifndef SRE_H
 #define SRE_H
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdint.h>
