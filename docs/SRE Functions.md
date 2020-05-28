@@ -12,6 +12,10 @@ The entry point for SRE initialization. This function performs the following fun
 
 * Initializes the MAM and saves its address to `manager`
 
+#### `sre_clean()`
+
+The entry point for SRE clean-up. Deletes dynamically-allocated memory and assigns `NULL` to accessible pointers.
+
 ### Errors
 
 Some of the functions declared in `sre.h` serve error-handling purposes that do not belong in other modules.
