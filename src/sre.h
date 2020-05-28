@@ -24,6 +24,12 @@ Much of the assembly present in the runtime environment and standard library is 
 // global variables required by the SRE
 static struct mam *manager;
 
+// MAM-related entry functions (call the C wrappers enumerated in mam.h)
+uintptr_t sre_request_resource(size_t size);
+bool sre_mam_contains(uintptr_t address);
+void sre_add_ref(uintptr_t address);
+void sre_free(uintptr_t address);
+
 // Initialization and clean-up functions; called on program startup and exit
 void sre_init();
 void sre_clean();

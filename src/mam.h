@@ -70,10 +70,10 @@ In order for this file to be included in both the C and C++ files, the preproces
 
     struct mam* new_mam();
     void delete_mam(struct mam *m);
-    bool mam_contains(struct mam *m, unsigned long key);
+    bool mam_contains(struct mam *m, uintptr_t key);
     uintptr_t mam_allocate(struct mam *m, size_t size);
-    void mam_add_ref(struct mam *m, unsigned long address);
-    void mam_free(struct mam *m, unsigned long address);
+    void mam_add_ref(struct mam *m, uintptr_t address);
+    void mam_free(struct mam *m, uintptr_t address);
 
 #endif
 
