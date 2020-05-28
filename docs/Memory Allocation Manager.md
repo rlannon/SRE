@@ -4,13 +4,9 @@
 
 The Memory Allocation Manager (MAM) is at the center of the SRE; it is not only responsible for safely allocating and releasing memory (by abstracting away calls to `malloc()` and `free()`), but it also serves as a garbage collector. This increases memory safety by maintaining a reference counter for all dynamically-allocated memory and automatically removing such resources when they become inaccessible.
 
-## Required Functions and Data
+## Required Functions
 
 Any SIN compiler should support any properly-implemented SRE distribution, and so the behavior of the necessary functions as well as the necessary data members are detailed here so that anyone may implement it.
-
-### Data
-
-Since the SRE must only operate when called, there must be a static pointer to the MAM. This pointer is called `manager`, and is modified by the initialization and clean-up functions.
 
 ### Functions
 
