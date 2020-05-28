@@ -27,15 +27,15 @@ In order for this file to be included in both the C and C++ files, the preproces
     class mam {
         class node {
             uintptr_t address;
-            unsigned int size;
-            unsigned int rc;
+            size_t size;
+            uint32_t rc;
         public:
             void add_ref();
             void remove_ref();
 
             uintptr_t get_address();
-            unsigned int get_size();
-            unsigned int get_rc();
+            size_t get_size();
+            uint32_t get_rc();
 
             node(uintptr_t address, size_t size);
             ~node();
@@ -60,8 +60,8 @@ In order for this file to be included in both the C and C++ files, the preproces
     extern "C" void delete_mam(mam *m);
     extern "C" bool mam_contains(mam *m, uintptr_t key);
     extern "C" uintptr_t mam_allocate(mam *m, size_t size);
-    extern "C" unsigned int mam_get_rc(mam *m, uintptr_t address);
-    extern "C" unsigned int mam_get_size(mam *m, uintptr_t address);
+    extern "C" uint32_t mam_get_rc(mam *m, uintptr_t address);
+    extern "C" size_t mam_get_size(mam *m, uintptr_t address);
     extern "C" void mam_add_ref(mam *m, uintptr_t address);
     extern "C" void mam_free(mam *m, uintptr_t address);
 
@@ -74,8 +74,8 @@ In order for this file to be included in both the C and C++ files, the preproces
     void delete_mam(struct mam *m);
     bool mam_contains(struct mam *m, uintptr_t key);
     uintptr_t mam_allocate(struct mam *m, size_t size);
-    unsigned int mam_get_rc(struct mam *m, uintptr_t address);
-    unsigned int mam_get_size(struct mam *m, uintptr_t address);
+    uint32_t mam_get_rc(struct mam *m, uintptr_t address);
+    size_t mam_get_size(struct mam *m, uintptr_t address);
     void mam_add_ref(struct mam *m, uintptr_t address);
     void mam_free(struct mam *m, uintptr_t address);
 

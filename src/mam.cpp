@@ -25,11 +25,11 @@ uintptr_t mam::node::get_address() {
     return this->address;
 }
 
-unsigned int mam::node::get_size() {
+size_t mam::node::get_size() {
     return this->size;
 }
 
-unsigned int mam::node::get_rc() {
+uint32_t mam::node::get_rc() {
     return this->rc;
 }
 
@@ -171,11 +171,11 @@ uintptr_t mam_allocate(mam *m, size_t size) {
     return m->request_resource(size);
 }
 
-unsigned int mam_get_rc(mam *m, uintptr_t address) {
+uint32_t mam_get_rc(mam *m, uintptr_t address) {
     return m->find(address).get_rc();
 }
 
-unsigned int mam_get_size(mam *m, uintptr_t address) {
+size_t mam_get_size(mam *m, uintptr_t address) {
     return m->find(address).get_size();
 }
 
