@@ -21,12 +21,18 @@ Much of the assembly present in the runtime environment and standard library is 
 #include "runtime_error_codes.h"
 #include "mam.h"
 
+// If this file is being used by a C++ program, this is necessary
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // global variables required by the SRE
 static struct mam *manager;
 
 // MAM-related entry functions (call the C wrappers enumerated in mam.h)
 uintptr_t sre_request_resource(size_t size);
 bool sre_mam_contains(uintptr_t address);
+unsigned int sre_get_rc(uintptr_t address);
 void sre_add_ref(uintptr_t address);
 void sre_free(uintptr_t address);
 
@@ -36,5 +42,9 @@ void sre_clean();
 
 // SIN runtime errors
 void sinl_rte_index_out_of_bounds();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
