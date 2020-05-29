@@ -87,5 +87,56 @@ sinl_str_concat:
     ; returns:
     ;   ptr<string> -   a pointer to the resultant string (usually just the data buffer)
     ;
+
+    ; todo: handle string concatenations where the first pointer is to the string buffer
+
+    ; Calculate length of the resultant string
+    mov eax, [rsi]
+    add eax, [rdi]
+    add eax, 4  ; add one for the null byte, 4 for the length
+    push rax    ; preserve the length
     
+    ; Request a reallocation -- does nothing if a reallocation is not needed
+    mov r12, rsi
+    mov r13, rdi    ; preserve RSI and RDI
+
+    mov rdi, _sinl_str_buffer ; move the address of the buffer in
+    mov esi, eax
+    call _sre_reallocate
+
+    ; assign the string buffer pointer
+    mov [_sinl_str_buffer], rax
+
+    pop rcx ; restore the length
+
+    ; Perform the concatenation
+    cld ; clear the direction flag (just in case)
+    mov rbx, [_sinl_str_buffer]
+    mov [rbx], ecx ; move the combined length in
+    add rbx, 4  ; RBX contains a pointer to the first 
+
+    ; Copy the first string in
+    mov rsi, r12    ; restore the first string address
+    mov ecx, [rsi]  ; get the length of the first string
+    add rsi, 4  ; skip the length
+    mov rdi, rbx
+    rep movsb
+
+    ; And now the second string
+    mov rsi, r13    ; restore the source of the right-hand string
+    mov ecx, [rsi]  ; get the length of the second string
+    add rsi, 4  ; skip the length of the source string
+    mov rdi, rbx    ; get the destination operand
+    add rdi, rcx    ; skip the left-hand string data
+    rep movsb
+
+    ; now, append a null byte
+    mov rbx, [_sinl_str_buffer]
+    mov ecx, [rbx]
+    add ecx, 4  ; ensure we skip the length
+    mov al, 0
+    mov [rbx + rcx], al
+
+    ; return the address of the buffer
+    mov rax, [_sinl_str_buffer]
     ret
