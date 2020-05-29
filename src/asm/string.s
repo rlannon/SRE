@@ -2,9 +2,10 @@
 ; string.s
 ; Copyright 2020 Riley Lannon
 
-; The SIN string module. Contains various functions to add string functionality to the language
+; The SIN string module
+; Contains various functions to add string functionality to the language
 
-; Declare some macros
+; Macros to centralize constants/magic numbers
 %define default_string_length    15
 %define base_string_width 5
 
@@ -71,11 +72,10 @@ sinl_str_copy:
     mov eax, [rsi]
     mov ebx, [rdi]
     cmp eax, ebx
-    jg .reallocate
+    jle .copy
 
 ; if we need to reallocate the string, this will execute
 .reallocate:
-    ; todo: check to see if we need to reallocate here? the MAM will do it upon request for reallocation...
     ; note the *actual* size of the allocated block for the string is in the MAM
     ; if the MAM actually has enough memory for the new string, the request for reallocation will do nothing
 
@@ -127,29 +127,41 @@ sinl_str_concat:
     ;   ptr<string> -   a pointer to the resultant string (usually just the data buffer)
     ;
 
-    ; todo: handle string concatenations where the first pointer is to the string buffer
-
     ; Calculate length of the resultant string
     mov eax, [rsi]
     add eax, [rdi]
-    add eax, 4  ; add one for the null byte, 4 for the length
     push rax    ; preserve the length
+    add eax, base_string_width  ; add the base width to determine actual memory footprint
     
     ; Request a reallocation -- does nothing if a reallocation is not needed
     mov r12, rsi
     mov r13, rdi    ; preserve RSI and RDI
 
-    mov rdi, _sinl_str_buffer ; move the address of the buffer in
+    mov rdi, [_sinl_str_buffer] ; move the address of the buffer in
     mov esi, eax
-    call _sre_reallocate
+    call _sre_reallocate    ; returns the new address
 
     ; assign the string buffer pointer
     mov [_sinl_str_buffer], rax
 
-    pop rcx ; restore the length
+    ; if the LHS is the string buffer, we can just adjust the string's length and copy the second string in
+    ; note we don't need to worry about whether or not the buffer was reallocated, as a reallocation will automatically copy the old data into the new location
+    cld ; clear the direction flag for 'rep' (just in case)
+    pop rcx ; restore the total length
+    cmp r12, [_sinl_str_buffer] ; compare addresses
+    jne .full_copy
 
-    ; Perform the concatenation
-    cld ; clear the direction flag (just in case)
+    ; adjust the length
+    mov rbx, [_sinl_str_buffer]
+    mov eax, [rbx]  ; get the length of the first string
+    mov [rbx], ecx  ; adjust the string length
+    ; add the length of the data dword and the first string to get the proper address
+    add rbx, 4
+    add rbx, eax
+    ; now, copy the second string
+    jmp .copy_second
+.full_copy:
+    ; Perform the full concatenation
     mov rbx, [_sinl_str_buffer]
     mov [rbx], ecx ; move the combined length in
     add rbx, 4  ; RBX contains a pointer to the first 
@@ -160,7 +172,7 @@ sinl_str_concat:
     add rsi, 4  ; skip the length
     mov rdi, rbx
     rep movsb
-
+.copy_second:
     ; And now the second string
     mov rsi, r13    ; restore the source of the right-hand string
     mov ecx, [rsi]  ; get the length of the second string
