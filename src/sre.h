@@ -35,6 +35,7 @@ uintptr_t sre_request_resource(size_t size);
 uintptr_t sre_reallocate(uintptr_t old_address, size_t new_size);
 bool sre_mam_contains(uintptr_t address);
 unsigned int sre_get_rc(uintptr_t address);
+size_t sre_get_size(uintptr_t address);
 void sre_add_ref(uintptr_t address);
 void sre_free(uintptr_t address);
 

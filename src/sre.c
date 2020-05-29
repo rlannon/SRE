@@ -46,6 +46,11 @@ unsigned int sre_get_rc(uintptr_t address) {
     return mam_get_rc(manager, address);
 }
 
+size_t sre_get_size(uintptr_t address) {
+    // Returns the size of the given resource (in bytes)
+    return mam_get_size(manager, address);
+}
+
 void sre_add_ref(uintptr_t address) {
     // Adds a reference to the resource at 'address'
     mam_add_ref(manager, address);
