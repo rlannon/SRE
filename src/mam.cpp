@@ -52,8 +52,7 @@ bool mam::contains(uintptr_t key) {
 mam::node& mam::find(uintptr_t key) {
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
-        std::cout << "Fatal: could not locate resource" << std::endl;
-        exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
+        sre_mam_undefined_resource_error();
     }
 
     return it->second;
@@ -140,8 +139,7 @@ void mam::add_ref(uintptr_t key) {
     // increment the RC of the resource by one
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
-        std::cout << "Fatal: Could not locate requested resource" << std::endl;
-        exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
+        sre_mam_undefined_resource_error();
     } else {
         node &n = it->second;
         if (n.get_rc() + 1 == 0) {
@@ -228,4 +226,11 @@ void mam_add_ref(mam *m, uintptr_t address) {
 
 void mam_free(mam *m, uintptr_t address) {
     m->free_resource(address);
+}
+
+// Common functions
+
+void sre_mam_undefined_resource_error() {
+    printf("Fatal: could not locate resource (perhaps a reference was invalidated?)");
+    exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
 }

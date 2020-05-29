@@ -9,6 +9,9 @@ extern sre_reallocate
 
 sinl_string_alloc:
     ; allocates a new string and returns its address
+    ; note that strings take up 5 bytes more than the number of characters:
+    ;   * 4 bytes for the length
+    ;   * 1 null byte at the end
     ret
 
 sinl_str_copy:
@@ -28,7 +31,7 @@ sinl_str_copy:
     mov eax, [rsi]
     mov ebx, [rdi]
     cmp eax, ebx
-    jg .copy
+    jg .reallocate
 
 ; if we need to reallocate the string, this will execute
 .reallocate:
@@ -41,6 +44,7 @@ sinl_str_copy:
     mov ebx, 2
     div ebx   ; in 64-bit mode, the div instruction's default size is 32 bits
     add eax, [rsi]
+    add eax, 5  ; add the extra string bytes
 
     ; reallocate the destination string -- use the SRE
     ;   pass old address in RDI
@@ -59,17 +63,17 @@ sinl_str_copy:
 
     ; the new destination address is in RAX; copy it into RDI
     mov rdi, rax
-    
 ; the actual copy routine
 .copy:
     mov rax, rdi    ; ensure the address of the destination string is preserved in RAX
     cld ; ensure the direction flag is clear (so 'rep' increments the pointers)
     mov ecx, [rsi]
+    add ecx, 1  ; make sure the null byte is copied
     movsd   ; copy the length information
     add rsi, 4
     add rsi, 4  ; add the width of the string length information (4 bytes) to the pointers
-.loop:
-    rep movsb
+
+    rep movsb   ; perform the copy
 
     ; done
     ret

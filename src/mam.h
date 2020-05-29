@@ -16,6 +16,7 @@ In order for this file to be included in both the C and C++ files, the preproces
 #define MAM_H
 
 #include "runtime_error_codes.h"
+#include <stdio.h>
 
 #ifdef __cplusplus
 
@@ -84,5 +85,7 @@ In order for this file to be included in both the C and C++ files, the preproces
     void mam_free(struct mam *m, uintptr_t address);
 
 #endif
+
+void sre_mam_undefined_resource_error();
 
 #endif  /* MAM_H */
