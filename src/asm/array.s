@@ -5,6 +5,9 @@
 ; The SIN array module
 ; Contains the necessary functions to implement array functionality to SIN
 
+; Macros for constants
+%define base_array_width 4
+
 ; External functions and data
 extern _sre_request_resource
 extern _sre_reallocate
@@ -16,7 +19,25 @@ sinl_dynamic_array_alloc:
     ;   int &unsigned width     -   The width of the contained type
     ;   int &unsigned length    -   The number of elements to be allocated
     ;
+    ; This will allocate at least 16 bytes for the array, else 1.5x the initial length
+    ;
 
+    mov rax, rsi
+    mul rdi
+    add rax, base_array_width
+    mov rdi, rax
+    
+    ; multiply by 1.5
+    mov rcx, 2
+    div rcx
+    add rdi, rax
+
+    cmp rdi, 0x10
+    jge .allocate
+    
+    mov rdi, 0x10
+.allocate:
+    call _sre_request_resource
     ret
 
 sinl_array_copy:
