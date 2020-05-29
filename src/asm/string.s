@@ -4,7 +4,12 @@
 
 ; The SIN string module. Contains various functions to add string functionality to the language
 
+; Declare some macros
+%define default_string_length    15
+%define base_string_width 5
+
 ; Declare our external routines and data
+extern _sre_request_resource
 extern _sre_reallocate
 extern _sinl_str_buffer
 
@@ -13,6 +18,29 @@ sinl_string_alloc:
     ; note that strings take up 5 bytes more than the number of characters:
     ;   * 4 bytes for the length
     ;   * 1 null byte at the end
+    ; parameters:
+    ;   unsigned int size   -   An initial size for the string, if known, otherwise 0
+    
+    cmp rax, 0
+    je .default
+    jmp .known
+.default:
+    ; the default size
+    mov edi, default_string_length
+    add edi, base_string_width
+    call _sre_request_resource
+    ; RAX now contains the address of the string
+    jmp .done
+.known:
+    ; a known initial length
+    mov edi, esi
+    add edi, base_string_width
+    call _sre_request_resource
+.done:
+    mov [rax], 0    ; move 0 into the string length, as it is empty
+    mov rbx, rax
+    add rbx, 4
+    mov [rbx], 0    ; move a null byte into the first byte of the string
     ret
 
 sinl_str_copy:
@@ -45,7 +73,7 @@ sinl_str_copy:
     mov ebx, 2
     div ebx   ; in 64-bit mode, the div instruction's default size is 32 bits
     add eax, [rsi]
-    add eax, 5  ; add the extra string bytes
+    add eax, base_string_width  ; add the extra string bytes
 
     ; reallocate the destination string -- use the SRE
     ;   pass old address in RDI
