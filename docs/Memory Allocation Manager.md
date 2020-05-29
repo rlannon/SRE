@@ -28,6 +28,10 @@ Returns whether the MAM contains a resource at the given address.
 
 Allocates an object of the specified size using `malloc()`, adding it to the table. The reference count always starts at 1, as it is not possible for an inaccessible object to be created. If memory cannot be allocated, it causes a fatal runtime error, exiting with code `0xE0`.
 
+#### `uintptr_t mam_reallocate(struct mam *m, uintptr_t old_address, size_t new_size)`
+
+Requests a reallocation of the specified object to be `new_size` bytes long. If the new size is less than or equal to its current size, a reallocation will not occur, similar to how C++ `vector`'s `resize` method will not free memory (`shrink_to_fit` exists, but it is non-binding). This avoids the potential scenario where a dynamic object (like a string) is shrunk, only to need to be expanded again later and potentially increasing memory fragmentation.
+
 #### `unsigned int mam_get_rc(struct mam *m, uintptr_t address)`
 
 Returns the reference count of the specified resource. If the resource does not exist, causes a fatal runtime error, exiting with code `0xEA`.
