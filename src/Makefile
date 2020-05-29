@@ -17,7 +17,7 @@ cppflags=-std=$(cpp_version) -g
 # General makefile macros
 target=sre.o
 
-asm_obj=memory.o string.o
+asm_obj=memory.o array.o string.o
 mam_obj=mam.o
 sre_dependencies=sre.h runtime_error_codes.h $(asm_obj) $(mam_obj)
 
@@ -28,7 +28,11 @@ default: $(target)
 $(target): $(sre_dependencies)
 	@echo "Building SRE..."
 	$(cc) $(cflags) -o $@ -c sre.c
-	@echo "Build successful."
+	@echo "Compiled successfully."
+	@echo "Creating shared library..."
+	ar rcs sre.a $@ $(mam_obj) $(asm_obj)
+	rm *.o
+	@echo "Done."
 
 mam.o: mam.h mam.cpp runtime_error_codes.h
 	$(cpp) $(cppflags) -o mam.o -c mam.cpp
@@ -36,6 +40,9 @@ mam.o: mam.h mam.cpp runtime_error_codes.h
 # Assembly
 memory.o: asm/memory.s
 	$(asm) $(asm_flags) asm/memory.s -o memory.o
+
+array.o: asm/array.s
+	$(asm) $(asm_flags) asm/array.s -o array.o
 
 string.o: asm/string.s
 	$(asm) $(asm_flags) asm/string.s -o string.o
