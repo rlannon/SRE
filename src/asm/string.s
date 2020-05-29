@@ -38,17 +38,20 @@ sinl_string_alloc:
 .known:
     ; a known initial length
     ; multiply by 1.5 to avoid reallocation if the length is adjusted
-    mov edi, esi
+    push rax    ; preserve RAX
+    mov eax, esi
     mov ecx, 2
-    div edi, ecx
+    div ecx
+    mov edi, eax    ; move the length into EDI and restore RAX
+    pop rax
     add edi, esi
     add edi, base_string_width
     call _sre_request_resource
 .done:
-    mov [rax], 0    ; move 0 into the string length, as it is empty
+    mov [rax], dword 0    ; move 0 into the string length, as it is empty
     mov rbx, rax
     add rbx, 4
-    mov [rbx], 0    ; move a null byte into the first byte of the string
+    mov [rbx], byte 0    ; move a null byte into the first byte of the string
     ret
 
 sinl_str_copy:
