@@ -15,25 +15,33 @@ extern _sinl_str_buffer
 
 sinl_string_alloc:
     ; allocates a new string and returns its address
+    ; parameters:
+    ;   unsigned int size   -   An initial size for the string, if known, otherwise 0
+    ;
     ; note that strings take up 5 bytes more than the number of characters:
     ;   * 4 bytes for the length
     ;   * 1 null byte at the end
-    ; parameters:
-    ;   unsigned int size   -   An initial size for the string, if known, otherwise 0
-    
+    ; these values are in macros to allow this to be modified more easily
+
     cmp rax, 0
-    je .default
+    je .known
+    cmp rax, base_string_width
+    jl .default ; the amount we allocate should be at least the base string width
     jmp .known
 .default:
     ; the default size
     mov edi, default_string_length
     add edi, base_string_width
     call _sre_request_resource
-    ; RAX now contains the address of the string
+    ; RAX now contains the address of the string (the return value)
     jmp .done
 .known:
     ; a known initial length
+    ; multiply by 1.5 to avoid reallocation if the length is adjusted
     mov edi, esi
+    mov ecx, 2
+    div edi, ecx
+    add edi, esi
     add edi, base_string_width
     call _sre_request_resource
 .done:
