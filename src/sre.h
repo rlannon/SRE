@@ -28,6 +28,7 @@ extern "C" {
 
 // global variables required by the SRE
 static struct mam *manager;
+static char *sinl_str_buffer;
 
 // MAM-related entry functions (call the C wrappers enumerated in mam.h)
 uintptr_t sre_request_resource(size_t size);

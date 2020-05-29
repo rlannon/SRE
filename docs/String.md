@@ -29,3 +29,7 @@ Allocates a new string. Note that all allocated string will require 5 additional
 Copies a string from the addres in `rsi` to the address in `rdi`. This function will automatically reallocate the destination string if necessary. This function returns a pointer to the destination string in case a reallocation occurs.
 
 Note that this function follows the [SINCALL](https://rlannon.github.io/SINx86/Calling%20Convention) convention.
+
+#### `sinl_str_concat`
+
+Concatenates two strings and returns a pointer to the result. This utilizes the `sinl_str_buffer`, a dynamically-allocated buffer for temporary string data storage. This is also to be used with the standard library `input()` function.

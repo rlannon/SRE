@@ -1,8 +1,18 @@
 # SRE Documentation
 
-## General SRE Functions
+## General SRE Functions and Data
 
 While the SRE is divided into a series of modules, there are a few general functions that do not fit into one particular module. Most of these functions are related to SRE maintenance, and are only called in initialization, etc.. The purpose of this document is to outline these functions.
+
+The SRE also contains some data that must be accessed by SIN programs and the SRE itself. Such data is declared in `sre.h` and will be discussed here.
+
+## Data
+
+### `char *sinl_str_buffer`
+
+The string buffer is important for things like I/O and string concatenation. The buffer, which starts at 128 characters but can be dynamically resized if necessary, is initialized by the SRE initialization routine and freed during the clean-up routine.
+
+## Functions
 
 ### Initialization and clean-up
 

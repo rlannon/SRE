@@ -4,8 +4,9 @@
 
 ; The SIN string module. Contains various functions to add string functionality to the language
 
-; Declare our external routines
-extern sre_reallocate
+; Declare our external routines and data
+extern _sre_reallocate
+extern _sinl_str_buffer
 
 sinl_string_alloc:
     ; allocates a new string and returns its address
@@ -55,7 +56,7 @@ sinl_str_copy:
     ; pass addesses
     mov rdi, [rdi]
     mov esi, eax
-    call sre_reallocate
+    call _sre_reallocate
 
     ; restore pointer values
     mov rsi, r12

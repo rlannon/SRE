@@ -40,7 +40,6 @@ mam::node::node(uintptr_t address, size_t size) {
 }
 
 mam::node::~node() {
-
 }
 
 // mam functions
@@ -179,7 +178,14 @@ mam::mam() {
 }
 
 mam::~mam() {
-
+    // free all dynamically-allocated memory
+    for (
+        std::unordered_map<uintptr_t, node>::iterator it = this->resources.begin();
+        it != this->resources.end();
+        it++) {
+            void *p = (void*)(it->second.get_address());
+            free(p);
+    }
 }
 
 // C wrappers
