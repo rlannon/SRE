@@ -157,7 +157,7 @@ sinl_str_concat:
     mov [rbx], ecx  ; adjust the string length
     ; add the length of the data dword and the first string to get the proper address
     add rbx, 4
-    add rbx, eax
+    add rbx, rax
     ; now, copy the second string
     jmp .copy_second
 .full_copy:
