@@ -10,9 +10,9 @@
 %define base_string_width 5
 
 ; Declare our external routines and data
-extern _sre_request_resource
-extern _sre_reallocate
-extern _sinl_str_buffer
+extern sre_request_resource
+extern sre_reallocate
+extern sinl_str_buffer
 
 sinl_string_alloc:
     ; allocates a new string and returns its address
@@ -33,7 +33,7 @@ sinl_string_alloc:
     ; the default size
     mov edi, default_string_length
     add edi, base_string_width
-    call _sre_request_resource
+    call sre_request_resource
     ; RAX now contains the address of the string (the return value)
     jmp .done
 .known:
@@ -47,7 +47,7 @@ sinl_string_alloc:
     pop rax
     add edi, esi
     add edi, base_string_width
-    call _sre_request_resource
+    call sre_request_resource
 .done:
     mov [rax], dword 0    ; move 0 into the string length, as it is empty
     mov rbx, rax
@@ -95,7 +95,7 @@ sinl_str_copy:
     ; pass addesses
     mov rdi, [rdi]
     mov esi, eax
-    call _sre_reallocate
+    call sre_reallocate
 
     ; restore pointer values
     mov rsi, r12
@@ -137,22 +137,22 @@ sinl_str_concat:
     mov r12, rsi
     mov r13, rdi    ; preserve RSI and RDI
 
-    mov rdi, [_sinl_str_buffer] ; move the address of the buffer in
+    mov rdi, [sinl_str_buffer] ; move the address of the buffer in
     mov esi, eax
-    call _sre_reallocate    ; returns the new address
+    call sre_reallocate    ; returns the new address
 
     ; assign the string buffer pointer
-    mov [_sinl_str_buffer], rax
+    mov [sinl_str_buffer], rax
 
     ; if the LHS is the string buffer, we can just adjust the string's length and copy the second string in
     ; note we don't need to worry about whether or not the buffer was reallocated, as a reallocation will automatically copy the old data into the new location
     cld ; clear the direction flag for 'rep' (just in case)
     pop rcx ; restore the total length
-    cmp r12, [_sinl_str_buffer] ; compare addresses
+    cmp r12, [sinl_str_buffer] ; compare addresses
     jne .full_copy
 
     ; adjust the length
-    mov rbx, [_sinl_str_buffer]
+    mov rbx, [sinl_str_buffer]
     mov eax, [rbx]  ; get the length of the first string
     mov [rbx], ecx  ; adjust the string length
     ; add the length of the data dword and the first string to get the proper address
@@ -162,7 +162,7 @@ sinl_str_concat:
     jmp .copy_second
 .full_copy:
     ; Perform the full concatenation
-    mov rbx, [_sinl_str_buffer]
+    mov rbx, [sinl_str_buffer]
     mov [rbx], ecx ; move the combined length in
     add rbx, 4  ; RBX contains a pointer to the first 
 
@@ -182,12 +182,12 @@ sinl_str_concat:
     rep movsb
 
     ; now, append a null byte
-    mov rbx, [_sinl_str_buffer]
+    mov rbx, [sinl_str_buffer]
     mov ecx, [rbx]
     add ecx, 4  ; ensure we skip the length
     mov al, 0
     mov [rbx + rcx], al
 
     ; return the address of the buffer
-    mov rax, [_sinl_str_buffer]
+    mov rax, [sinl_str_buffer]
     ret

@@ -9,10 +9,11 @@
 %define base_array_width 4
 
 ; External functions and data
-extern _sre_request_resource
-extern _sre_reallocate
-extern _sre_get_size
+extern sre_request_resource
+extern sre_reallocate
+extern sre_get_size
 
+global sinl_dynamic_array_alloc
 sinl_dynamic_array_alloc:
     ; Allocates an array in dynamic memory
     ; Parameters:
@@ -37,44 +38,43 @@ sinl_dynamic_array_alloc:
     
     mov rdi, 0x10
 .allocate:
-    call _sre_request_resource
+    call sre_request_resource
     ret
 
+global sinl_array_copy
 sinl_array_copy:
     ; Copies an array from one location to another
     ; Parameters:
     ;   ptr<array> src  -   The source array
     ;   pre<array> dest -   The destination
+    ;   int &unsigned width -   The width of the contained type
     ;
-    ; Note that unlike a string copy, this function will not reallocate the destination array; instead, it will copy as many elements as it can from src to dest
-    ; It will copy all of the *bytes* from the source into the destination, even if those bytes are not all filled with actual elements
+    ; Note that unlike a string copy, this function will not reallocate the destination array;
+    ;   instead, it will copy as many elements as it can from src to dest
+    ; It will copy all of the *bytes* from the source into the destination, 
+    ;   even if those bytes are not all filled with actual elements
     ;
 
-    ; first, compare the lengths of the allocated memory
-    push rsi
-    push rdi
+    ; compare the lengths of the arrays
+    ; since the arrays might not be dynamic, we should use the length dword and the width parameter (rcx)
+    mov eax, [rsi]
+    mov ebx, [rdi]
 
-    ; call the sre_get_size function
-    mov rdi, rsi
-    call _sre_get_size
-
-    ; the size is in RAX
-    pop rdi
-    push rax
-    call _sre_get_size
+    ; if the source array as equal to or fewer elements than the destination, we can copy the data
+    cmp eax, ebx
+    jle .copy
     
-    ; compare the sizes
-    pop rcx
-    cmp rax, rcx    ; compare destination to source
-                    ; if the source can fit in the destination, proceed to copy
-    jge .copy
-
-    ; else, we need to get the number of bytes we *can* fit, which is in RAX
-    mov rcx, rax
+    ; otherwise, move the number of elements we *can* copy into eax
+    mov eax, ebx
 .copy:
-    ; copy all of the bytes we can into the destination from the source
-    pop rdi
-    pop rsi
+    ; multiply the number of elements (eax) by the width of those elements (ecx)
+    ; afterwards, move the result into RCX to get the number of bytes
+    mul rcx
+    mov rcx, rax
+
+    ; increment the pointers to skip the length word
+    add rsi, 4
+    add rdi, 4
     cld
     rep movsb
 
