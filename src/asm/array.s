@@ -78,4 +78,5 @@ sinl_array_copy:
     cld
     rep movsb
 
+    xor eax, eax    ; the routine should return void
     ret
