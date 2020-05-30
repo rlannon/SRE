@@ -7,12 +7,12 @@ asm_flags=-g -f elf64
 
 # C macros
 cc=gcc
-cflags=-g -Wall -nostartfiles
+cflags=-g -Wall
 
 # C++ macros
 cpp=g++
 cpp_version=c++17
-cppflags=-std=$(cpp_version) -g -Wall -nostartfiles
+cppflags=-std=$(cpp_version) -g -Wall
 
 # General makefile macros
 target=sre.o
