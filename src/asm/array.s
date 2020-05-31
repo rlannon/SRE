@@ -29,6 +29,7 @@ sinl_dynamic_array_alloc:
     mov rdi, rax
     
     ; multiply by 1.5
+    mov rdx, 0
     mov rcx, 2
     div rcx
     add rdi, rax

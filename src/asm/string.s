@@ -14,6 +14,7 @@ extern sre_request_resource
 extern sre_reallocate
 extern sinl_str_buffer
 
+global sinl_string_alloc
 sinl_string_alloc:
     ; allocates a new string and returns its address
     ; parameters:
@@ -41,6 +42,7 @@ sinl_string_alloc:
     ; multiply by 1.5 to avoid reallocation if the length is adjusted
     push rax    ; preserve RAX
     mov eax, esi
+    mov edx, 0
     mov ecx, 2
     div ecx
     mov edi, eax    ; move the length into EDI and restore RAX
@@ -55,7 +57,8 @@ sinl_string_alloc:
     mov [rbx], byte 0    ; move a null byte into the first byte of the string
     ret
 
-sinl_str_copy:
+global sinl_string_copy
+sinl_string_copy:
     ; copies a string from one location to another
     ; parameters:
     ;   ptr<string> src     -   the source string
@@ -81,6 +84,7 @@ sinl_str_copy:
 
     ; get the new size -- should be size of the source string * 1.5 for safety
     mov eax, [rsi]
+    mov edx, 0
     mov ebx, 2
     div ebx   ; in 64-bit mode, the div instruction's default size is 32 bits
     add eax, [rsi]
@@ -92,14 +96,12 @@ sinl_str_copy:
     mov r12, rsi    ; first, preserve pointer values in registers
     mov r13, rdi    ; r12-r15 are considered "owned" by the caller and must be restored if used by the callee
 
-    ; pass addesses
-    mov rdi, [rdi]
+    ; pass addresses -- the string to reallocate is already in rdi
     mov esi, eax
     call sre_reallocate
 
     ; restore pointer values
     mov rsi, r12
-    mov rdi, r13
 
     ; the new destination address is in RAX; copy it into RDI
     mov rdi, rax
@@ -107,18 +109,18 @@ sinl_str_copy:
 .copy:
     mov rax, rdi    ; ensure the address of the destination string is preserved in RAX
     cld ; ensure the direction flag is clear (so 'rep' increments the pointers)
-    mov ecx, [rsi]
+    movsd   ; copy the length information (rsi and rdi automatically incremented)
+    
+    mov ecx, [rax]
     add ecx, 1  ; make sure the null byte is copied
-    movsd   ; copy the length information
-    add rsi, 4
-    add rsi, 4  ; add the width of the string length information (4 bytes) to the pointers
 
     rep movsb   ; perform the copy
 
     ; done
     ret
 
-sinl_str_concat:
+global sinl_string_concat
+sinl_string_concat:
     ; concatenates two strings, returning a pointer to the end result
     ; parameters:
     ;   ptr<string> left    -   the left-hand string
@@ -132,27 +134,31 @@ sinl_str_concat:
     add eax, [rdi]
     push rax    ; preserve the length
     add eax, base_string_width  ; add the base width to determine actual memory footprint
-    
+
     ; Request a reallocation -- does nothing if a reallocation is not needed
     mov r12, rsi
     mov r13, rdi    ; preserve RSI and RDI
 
-    mov rdi, [sinl_str_buffer] ; move the address of the buffer in
+    lea rbx, [rel sinl_str_buffer] ; move the address of the buffer in
+    mov rdi, [rbx]
     mov esi, eax
     call sre_reallocate    ; returns the new address
 
     ; assign the string buffer pointer
-    mov [sinl_str_buffer], rax
+    lea rbx, [rel sinl_str_buffer]
+    mov [rbx], rax
 
     ; if the LHS is the string buffer, we can just adjust the string's length and copy the second string in
     ; note we don't need to worry about whether or not the buffer was reallocated, as a reallocation will automatically copy the old data into the new location
     cld ; clear the direction flag for 'rep' (just in case)
     pop rcx ; restore the total length
-    cmp r12, [sinl_str_buffer] ; compare addresses
+    lea rbx, [rel sinl_str_buffer] ; compare addresses
+    cmp r12, [rbx]
     jne .full_copy
 
     ; adjust the length
-    mov rbx, [sinl_str_buffer]
+    lea rbx, [rel sinl_str_buffer]
+    mov rbx, [rbx]
     mov eax, [rbx]  ; get the length of the first string
     mov [rbx], ecx  ; adjust the string length
     ; add the length of the data dword and the first string to get the proper address
@@ -162,7 +168,8 @@ sinl_str_concat:
     jmp .copy_second
 .full_copy:
     ; Perform the full concatenation
-    mov rbx, [sinl_str_buffer]
+    lea rbx, [rel sinl_str_buffer]
+    mov rbx, [rbx]
     mov [rbx], ecx ; move the combined length in
     add rbx, 4  ; RBX contains a pointer to the first 
 
@@ -182,12 +189,14 @@ sinl_str_concat:
     rep movsb
 
     ; now, append a null byte
-    mov rbx, [sinl_str_buffer]
+    lea rbx, [rel sinl_str_buffer]
+    mov rbx, [rbx]
     mov ecx, [rbx]
     add ecx, 4  ; ensure we skip the length
     mov al, 0
     mov [rbx + rcx], al
 
     ; return the address of the buffer
-    mov rax, [sinl_str_buffer]
+    lea rax, [rel sinl_str_buffer]
+    mov rax, [rax]
     ret

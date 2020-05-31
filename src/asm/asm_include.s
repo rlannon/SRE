@@ -11,8 +11,8 @@
     %define ASM_INCLUDE
         ; string routines
         extern sinl_string_alloc
-        extern sinl_str_copy
-        extern sinl_str_concat
+        extern sinl_string_copy
+        extern sinl_string_concat
 
         ; array routines
         extern sinl_dynamic_array_alloc
