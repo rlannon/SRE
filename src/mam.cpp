@@ -237,6 +237,6 @@ void mam_free(mam *m, uintptr_t address) {
 // Common functions
 
 void sre_mam_undefined_resource_error() {
-    printf("Fatal: could not locate resource (perhaps a reference was invalidated?)");
+    printf("Fatal: could not locate resource (perhaps a reference was invalidated?)\n");
     exit(SRE_MAM_UNDEFINED_RESOURCE_ERROR);
 }
