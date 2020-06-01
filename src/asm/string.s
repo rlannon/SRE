@@ -158,41 +158,40 @@ sinl_string_concat:
 
     ; adjust the length
     lea rbx, [rel sinl_str_buffer]
-    mov rbx, [rbx]
-    mov eax, [rbx]  ; get the length of the first string
-    mov [rbx], ecx  ; adjust the string length
+    mov rdi, [rbx]
+    mov eax, [rdi]  ; get the length of the first string
+    mov [rdi], ecx  ; adjust the string length
     ; add the length of the data dword and the first string to get the proper address
-    add rbx, 4
-    add rbx, rax
+    add rdi, 4
+    add rdi, rax
     ; now, copy the second string
     jmp .copy_second
 .full_copy:
     ; Perform the full concatenation
     lea rbx, [rel sinl_str_buffer]
-    mov rbx, [rbx]
-    mov [rbx], ecx ; move the combined length in
-    add rbx, 4  ; RBX contains a pointer to the first 
+    mov rdi, [rbx]
+    mov [rdi], ecx  ; move the combined length in
+    add rdi, 4  ; increment RDI to contain a pointer to the first byte of the string data (where we want to copy in)
 
     ; Copy the first string in
     mov rsi, r12    ; restore the first string address
     mov ecx, [rsi]  ; get the length of the first string
     add rsi, 4  ; skip the length
-    mov rdi, rbx
     rep movsb
 .copy_second:
     ; And now the second string
     mov rsi, r13    ; restore the source of the right-hand string
     mov ecx, [rsi]  ; get the length of the second string
-    add rsi, 4  ; skip the length of the source string
-    mov rdi, rbx    ; get the destination operand
-    add rdi, rcx    ; skip the left-hand string data
+    add rsi, 4  ; skip the length
+                ; note that RDI, no matter which direction we took, contains the address to write to next
+                ; as such, we don't need to adjust it
     rep movsb
 
     ; now, append a null byte
     lea rbx, [rel sinl_str_buffer]
     mov rbx, [rbx]
     mov ecx, [rbx]
-    add ecx, 4  ; ensure we skip the length
+    add ecx, 4  ; ensure we skip the length dword
     mov al, 0
     mov [rbx + rcx], al
 
