@@ -16,10 +16,10 @@ This documentation is for the SRE only and assumes some level of knowledge with 
 
 ### Building the Library
 
-This project is written in a mixture of C++, C, and x86. Certain features, like the Memory Allocation Manager, are written in C++ (partially out of laziness to avoid implementating a hash table), while some routines must be  I am targeting Linux for the time being, though the end goal is to have a cross-platform product. Currently, no working binaries are available, though a makefile is included for compilation; this requires [nasm](https://www.nasm.us/) to assemble the `.s` files and GCC (and G++ for the C++).
+This project is written in a mixture of C++, C, and x86. Certain features, like the Memory Allocation Manager, are written in C++ (partially out of laziness to avoid implementating a hash table), while some routines, such as string or array copying, are written in assembly. I am targeting Linux for the time being, though the end goal is to have a cross-platform product. Currently, no working binaries are available, but a makefile is included for compilation; this requires [nasm](https://www.nasm.us/) to assemble the `.s` files and a working C++ compiler.
 
-Note, however, that there is not currently a compiler version that would even make this project useful.
+Note there is not currently a compiler version that would make this project useful -- it is still very much in development.
 
 ### Using the Library
 
-This library must be statically linked with *all* SIN programs in order for them to run, as they rely on the functionality from this library. Again, as there is not currently a working compiler for the language, that doesn't really matter for the time being.
+This library must be statically linked with *all* SIN programs in order for them to run, as they rely on the functionality from this library for strings buffers and, most importantly, reference counting.
