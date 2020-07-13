@@ -95,12 +95,6 @@ uintptr_t mam::reallocate_resource(uintptr_t r, size_t new_size) {
     if (this->contains(r)) {
         node& old_resource = this->find(r);
 
-        // todo: consider if this is necessary
-        // warn the user on cerr if dangling references exist
-        //if (old_resource.get_rc() > 1) {
-        //    std::cout << "Note: references still exist to the resource." << std::endl;
-        //}
-
         if (old_resource.get_size() >= new_size) {
             new_address = r;
         } else {
