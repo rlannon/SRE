@@ -156,6 +156,7 @@ sinl_string_concat:
     cmp r12, [rbx]
     jne .full_copy
 
+.adjust_buffer:
     ; adjust the length
     lea rbx, [rel sinl_str_buffer]
     mov rdi, [rbx]

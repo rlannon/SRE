@@ -91,24 +91,31 @@ uintptr_t mam::reallocate_resource(uintptr_t r, size_t new_size) {
     */
 
     uintptr_t new_address = 0;
-    node& old_resource = this->find(r);
 
-    // todo: consider if this is necessary
-    // warn the user on cerr if dangling references exist
-    if (old_resource.get_rc() > 1) {
-        std::cerr << "Note: references still exist to the resource." << std::endl;
+    if (this->contains(r)) {
+        node& old_resource = this->find(r);
+
+        // todo: consider if this is necessary
+        // warn the user on cerr if dangling references exist
+        //if (old_resource.get_rc() > 1) {
+        //    std::cout << "Note: references still exist to the resource." << std::endl;
+        //}
+
+        if (old_resource.get_size() >= new_size) {
+            new_address = r;
+        } else {
+            // get the new address
+            new_address = this->request_resource(new_size);
+
+            // perform a memcpy from old to new
+            memcpy((void*)new_address, (void*)old_resource.get_address(), old_resource.get_size());
+
+            // decrease the RC of the old resource
+            this->free_resource(old_resource.get_address());
+        }
     }
-
-    if (old_resource.get_size() >= new_size) {
-        new_address = r;
-    } else {
-        new_address = this->request_resource(new_size);
-
-        // perform a memcpy from old to new
-        memcpy((void*)old_resource.get_address(), (void*)new_address, old_resource.get_size());
-
-        // erase the old resource
-        this->resources.erase(old_resource.get_address());
+    else {
+        sre_mam_undefined_resource_error();
     }
 
     return new_address;
@@ -138,7 +145,9 @@ void mam::add_ref(uintptr_t key) {
     // increment the RC of the resource by one
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
-        sre_mam_undefined_resource_error();
+        // if we couldn't find the resource, just return
+        // sre_mam_undefined_resource_error();
+        return;
     } else {
         node &n = it->second;
         if (n.get_rc() + 1 == 0) {

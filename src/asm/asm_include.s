@@ -23,6 +23,7 @@
         extern sinl_str_buffer
 
         ; SRE functions
+	extern sinl_rte_index_out_of_bounds
 
         ; SRE MAM interaction
         extern sre_request_resource
