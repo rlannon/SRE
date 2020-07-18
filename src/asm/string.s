@@ -200,3 +200,55 @@ sinl_string_concat:
     lea rax, [rel sinl_str_buffer]
     mov rax, [rax]
     ret
+
+global sinl_string_append
+sinl_string_append:
+    ; appends a single character to a string
+    ; this is like concatenation, and the string will be located on the buffer
+    ; parameters:
+    ;   ptr<string> to_append   -   The string to which we are appending
+    ;   char c                  -   The character to append
+    ; returns:
+    ;   ptr<string> -   a pointer to the string buffer
+    ;
+
+    ; move the character into r12 and reallocate the buffer if necessary
+    mov r12b, dil
+    mov r13, rsi
+    
+    ; get the destination
+    lea rbx, [rel sinl_str_buffer]
+    mov rdi, [rbx]
+
+    ; get the new length
+    mov esi, [rsi]
+    add esi, 4
+    inc esi
+
+    ; call the function
+    call sre_reallocate
+
+    ; update the address in the string buffer pointer
+    lea rbx, [rel sinl_str_buffer]
+    mov [rbx], rax
+
+    ; update our source and destinations
+    mov rdi, rax
+    mov rsi, r13
+
+    ; copy onto the buffer
+.copy:
+    mov ecx, [rsi]
+    add ecx, 4	; since the width of each element is 1, we can just add the array length
+    rep movsb
+
+    ; append the character
+.append:
+    mov rsi, rax
+    mov ebx, [rsi]  ; index should be the last character
+    inc dword [rsi] ; now increment the string length
+    add rsi, rbx    ; skip to the proper index
+    add rsi, 4  ; skip the length
+    mov [rsi], r12b
+
+    ret
