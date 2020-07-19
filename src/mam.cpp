@@ -11,6 +11,10 @@ The implementation of the memory allocation manager and all of the C wrapper fun
 #include "mam.h"
 
 // mam::node functions
+bool mam::node::fixed() const {
+    return this->_fixed;
+}
+
 void mam::node::add_ref() {
     this->rc += 1;
 }
@@ -33,10 +37,11 @@ uint32_t mam::node::get_rc() {
     return this->rc;
 }
 
-mam::node::node(uintptr_t address, size_t size) {
+mam::node::node(uintptr_t address, size_t size, bool fixed) {
     this->address = address;
     this->size = size;
     this->rc = 1;   // For a node to be created, it must be referenced
+    this->_fixed = fixed;   // if it's fixed, it can't be freed unless overridden
 }
 
 mam::node::~node() {
@@ -57,9 +62,18 @@ mam::node& mam::find(uintptr_t key) {
     return it->second;
 }
 
-uintptr_t mam::request_resource(size_t size) {
-    // requests 'size' bytes from the OS, returning the address
-    // this automatically adds the resource to the table
+uintptr_t mam::request_resource(size_t size, bool fixed) {
+    /*
+
+    request_resource
+
+    Requests 'size' bytes from the OS, returning the address
+    This automatically adds the resource to the table
+
+    We can also request 'fixed' resources, meaning their RC cannot be decremented (meant to exist for the lifetime of the program)
+    
+    */
+
     uintptr_t address = 0;
     void* ptr = malloc(size);
 
@@ -69,7 +83,7 @@ uintptr_t mam::request_resource(size_t size) {
         exit(SRE_MAM_BAD_ALLOC);
     } else {
         address = reinterpret_cast<uintptr_t>(ptr);
-        this->insert(address, size);
+        this->insert(address, size, fixed);
     }
 
     return address;
@@ -99,13 +113,13 @@ uintptr_t mam::reallocate_resource(uintptr_t r, size_t new_size) {
             new_address = r;
         } else {
             // get the new address
-            new_address = this->request_resource(new_size);
+            new_address = this->request_resource(new_size, old_resource.fixed());
 
             // perform a memcpy from old to new
             memcpy((void*)new_address, (void*)old_resource.get_address(), old_resource.get_size());
 
-            // decrease the RC of the old resource
-            this->free_resource(old_resource.get_address());
+            // decrease the RC of the old resource, forcing it to free if it's fixed
+            this->free_resource(old_resource.get_address(), old_resource.fixed());
         }
     }
     else {
@@ -115,9 +129,15 @@ uintptr_t mam::reallocate_resource(uintptr_t r, size_t new_size) {
     return new_address;
 }
 
-void mam::insert(uintptr_t address, size_t size) {
-    // add the resource at 'address' to the table
-    // first, ensure a resource at the address doesn't already exist
+void mam::insert(uintptr_t address, size_t size, bool fixed) {
+    /*
+
+    insert
+
+    Add the resource at 'address' to the table
+    
+    */
+
     if (this->resources.count(address)) {
         // todo: throw exception if resource already exists? update RC? try again?
     } else {
@@ -125,7 +145,7 @@ void mam::insert(uintptr_t address, size_t size) {
             this->resources.insert(
                 std::make_pair<>(
                     address,
-                    node(address, size)
+                    node(address, size, fixed)
                 )
             );
         } catch (std::exception& e) {
@@ -137,7 +157,7 @@ void mam::insert(uintptr_t address, size_t size) {
 
 void mam::add_ref(uintptr_t key) {
     // increment the RC of the resource by one
-    std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
+    auto it = this->resources.find(key);
     if (it == this->resources.end()) {
         // if we couldn't find the resource, just return
         // sre_mam_undefined_resource_error();
@@ -153,13 +173,13 @@ void mam::add_ref(uintptr_t key) {
     }
 }
 
-void mam::free_resource(uintptr_t key) {
+void mam::free_resource(uintptr_t key, bool force_free) {
     // decrease RC of the resource by one, freeing the memory and erasing the entry if the RC hits 0
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
         // if the resource could not be found, the manager should ignore it
         return;
-    } else {
+    } else if (!it->second.fixed() || force_free) { // we can only free if it's not a fixed resource OR we are forcing a free
         node *n = &it->second;
         n->remove_ref();
         if (n->get_rc() == 0) {
@@ -183,9 +203,10 @@ mam::mam() {
 mam::~mam() {
     // free all dynamically-allocated memory
     for (
-        std::unordered_map<uintptr_t, node>::iterator it = this->resources.begin();
+        auto it = this->resources.begin();
         it != this->resources.end();
-        it++) {
+        it++
+    ) {
             void *p = (void*)(it->second.get_address());
             free(p);
     }
@@ -213,8 +234,8 @@ bool mam_contains(mam *m, uintptr_t key) {
     return m->contains(key);
 }
 
-uintptr_t mam_allocate(mam *m, size_t size) {
-    return m->request_resource(size);
+uintptr_t mam_allocate(mam *m, size_t size, bool fixed) {
+    return m->request_resource(size, fixed);
 }
 
 uintptr_t mam_reallocate(mam *m, uintptr_t old_address, size_t new_size) {

@@ -39,6 +39,7 @@ sinl_dynamic_array_alloc:
     
     mov rdi, 0x10
 .allocate:
+    mov si, 0
     call sre_request_resource
     ret
 

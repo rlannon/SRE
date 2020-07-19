@@ -25,30 +25,29 @@ sinl_string_alloc:
     ;   * 1 null byte at the end
     ; these values are in macros to allow this to be modified more easily
 
-    cmp rax, 0
-    je .known
-    cmp rax, base_string_width
+    cmp esi, default_string_length
     jl .default ; the amount we allocate should be at least the base string width
     jmp .known
 .default:
     ; the default size
     mov edi, default_string_length
     add edi, base_string_width
+    mov si, 0   ; it's not a fixed resource
     call sre_request_resource
     ; RAX now contains the address of the string (the return value)
     jmp .done
 .known:
     ; a known initial length
     ; multiply by 1.5 to avoid reallocation if the length is adjusted
-    push rax    ; preserve RAX
-    mov eax, esi
+    push rsi    ; preserve RSI
     mov edx, 0
     mov ecx, 2
     div ecx
-    mov edi, eax    ; move the length into EDI and restore RAX
-    pop rax
+    mov edi, eax    ; move the length into EDI and restore RSI
+    pop rsi
     add edi, esi
     add edi, base_string_width
+    mov esi, 0  ; it's not a fixed resource
     call sre_request_resource
 .done:
     mov [rax], dword 0    ; move 0 into the string length, as it is empty
@@ -250,5 +249,8 @@ sinl_string_append:
     add rsi, rbx    ; skip to the proper index
     add rsi, 4  ; skip the length
     mov [rsi], r12b
+    inc rsi
+    mov bl, 0
+    mov [rsi], bl
 
     ret

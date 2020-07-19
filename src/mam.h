@@ -31,7 +31,10 @@ In order for this file to be included in both the C and C++ files, the preproces
             uintptr_t address;
             size_t size;
             uint32_t rc;
+            bool _fixed;
         public:
+            bool fixed() const;
+
             void add_ref();
             void remove_ref();
 
@@ -39,20 +42,20 @@ In order for this file to be included in both the C and C++ files, the preproces
             size_t get_size();
             uint32_t get_rc();
 
-            node(uintptr_t address, size_t size);
+            node(uintptr_t address, size_t size, bool fixed = false);
             ~node();
         };
 
         std::unordered_map<uintptr_t, node> resources;
-        void insert(uintptr_t address, size_t size);
+        void insert(uintptr_t address, size_t size, bool fixed = false);
     public:
         bool contains(uintptr_t key);
         node& find(uintptr_t key);
-        uintptr_t request_resource(size_t size);
+        uintptr_t request_resource(size_t size, bool fixed = false);
         uintptr_t reallocate_resource(uintptr_t r, size_t new_size);
 
         void add_ref(uintptr_t key);
-        void free_resource(uintptr_t key);
+        void free_resource(uintptr_t key, bool force_free = false);
 
         mam();
         ~mam();
@@ -62,7 +65,7 @@ In order for this file to be included in both the C and C++ files, the preproces
     extern "C" mam* new_mam();
     extern "C" void delete_mam(mam *m);
     extern "C" bool mam_contains(mam *m, uintptr_t key);
-    extern "C" uintptr_t mam_allocate(mam *m, size_t size);
+    extern "C" uintptr_t mam_allocate(mam *m, size_t size, bool fixed);
     extern "C" uintptr_t mam_reallocate(mam *m, uintptr_t old_address, size_t new_size);
     extern "C" uint32_t mam_get_rc(mam *m, uintptr_t address);
     extern "C" size_t mam_get_size(mam *m, uintptr_t address);
@@ -77,7 +80,7 @@ In order for this file to be included in both the C and C++ files, the preproces
     struct mam* new_mam();
     void delete_mam(struct mam *m);
     bool mam_contains(struct mam *m, uintptr_t key);
-    uintptr_t mam_allocate(struct mam *m, size_t size);
+    uintptr_t mam_allocate(struct mam *m, size_t size, bool fixed);
     uintptr_t mam_reallocate(struct mam *m, uintptr_t old_address, size_t new_size);
     uint32_t mam_get_rc(struct mam *m, uintptr_t address);
     size_t mam_get_size(struct mam *m, uintptr_t address);

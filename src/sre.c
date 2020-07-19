@@ -11,7 +11,7 @@ This file contains the implementation of the SIN runtime environment.
 
 void sre_init() {
     manager = new_mam();    // allocate the MAM
-    sinl_str_buffer = (char*)sre_request_resource(134); // use the MAM to request a 128-character string buffer
+    sinl_str_buffer = (char*)sre_request_resource(134, true);   // use the MAM to request a 128-character string buffer
 }
 
 void sre_clean() {
@@ -26,9 +26,9 @@ Entry functions for the SRE Memory Allocation Manager
 
 */
 
-uintptr_t sre_request_resource(size_t size) {
+uintptr_t sre_request_resource(size_t size, bool fixed) {
     // Requests memory from the MAM
-    return mam_allocate(manager, size);
+    return mam_allocate(manager, size, fixed);
 }
 
 uintptr_t sre_reallocate(uintptr_t old_address, size_t new_size) {
