@@ -14,6 +14,7 @@
         extern sinl_string_copy
         extern sinl_string_concat
         extern sinl_string_append
+	extern sinl_string_copy_construct
 
         ; array routines
         extern sinl_dynamic_array_alloc
