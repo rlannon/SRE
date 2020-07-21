@@ -122,10 +122,10 @@ global sinl_string_concat
 sinl_string_concat:
     ; concatenates two strings, returning a pointer to the end result
     ; parameters:
-    ;   ptr<string> left    -   the left-hand string
-    ;   ptr<string> right   -   the right-hand string
+    ;   RSI     -   the left-hand string
+    ;   RDI     -   the right-hand string
     ; returns:
-    ;   ptr<string> -   a pointer to the resultant string (usually just the data buffer)
+    ;   RAX     -   a pointer to the resultant string (usually just the data buffer)
     ;
 
     ; Calculate length of the resultant string
@@ -205,10 +205,10 @@ sinl_string_append:
     ; appends a single character to a string
     ; this is like concatenation, and the string will be located on the buffer
     ; parameters:
-    ;   ptr<string> to_append   -   The string to which we are appending
-    ;   char c                  -   The character to append
+    ;   RSI     -   The string to which we are appending
+    ;   DIL     -   The character to append
     ; returns:
-    ;   ptr<string> -   a pointer to the string buffer
+    ;   RAX     -   a pointer to the string buffer
     ;
 
     ; move the character into r12 and reallocate the buffer if necessary
@@ -252,5 +252,45 @@ sinl_string_append:
     inc rsi
     mov bl, 0
     mov [rsi], bl
+
+    ret
+
+global sinl_string_copy_construct
+sinl_string_copy_construct:
+    ; Constructs a new string with an initial value
+    ; Equivalent to a C++ copy constructor
+    ; Parameters are:
+    ;   RSI -   The address of the initial string value
+    ;   RDI -   The address where we are storing this reference
+    ; This function returns no values, calling an SRE panic function if there was an error
+    ;
+
+    ; first, preserve RSI and RDI for later
+    push rdi
+    push rsi    ; push this second so we can pop it without popping RDI
+
+    ; allocate a string
+    mov esi, [rsi]
+    push rbp
+    mov rbp, rsp
+    call sinl_string_alloc
+    mov rsp, rbp
+    pop rbp
+
+    ; the address of the newly-allocated string is in RAX
+    mov rdi, rax
+    pop rsi
+    push rbp
+    mov rbp, rsp
+    call sinl_string_copy
+    mov rsp, rbp
+    pop rbp
+
+    ; the address of the string is in RAX
+    ; store it in the address pointed to by our second parameter
+    pop rdi
+    mov [rdi], rax
+
+    ; todo: error code? panic?
 
     ret
