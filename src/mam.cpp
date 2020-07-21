@@ -162,7 +162,7 @@ void mam::add_ref(uintptr_t key) {
         // if we couldn't find the resource, just return
         // sre_mam_undefined_resource_error();
         return;
-    } else {
+    } else if (!it->second.fixed()) {   // we also can't add references to fixed resources
         node &n = it->second;
         if (n.get_rc() + 1 == 0) {
             std::cout << "Fatal: Maximum number of references reached" << std::endl;
