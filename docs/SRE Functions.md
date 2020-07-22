@@ -8,9 +8,9 @@ The SRE also contains some data that must be accessed by SIN programs and the SR
 
 ## Data
 
-### `char *sinl_str_buffer`
+### `static struct mam * manager`
 
-The string buffer is important for things like I/O and string concatenation. The buffer, which starts at 128 characters but can be dynamically resized if necessary, is initialized by the SRE initialization routine and freed during the clean-up routine.
+The [MAM](Memory%20Allocation%20Manager.md) object which is allocated and freed by the runtime.
 
 ## Functions
 
