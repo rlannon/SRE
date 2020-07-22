@@ -12,13 +12,12 @@
 ; Declare our external routines and data
 extern sre_request_resource
 extern sre_reallocate
-extern sinl_str_buffer
 
 global sinl_string_alloc
 sinl_string_alloc:
     ; allocates a new string and returns its address
     ; parameters:
-    ;   unsigned int size   -   An initial size for the string, if known, otherwise 0
+    ;   ESI   -   An initial size for the string, if known, otherwise 0
     ;
     ; note that strings take up 5 bytes more than the number of characters:
     ;   * 4 bytes for the length
@@ -60,10 +59,10 @@ global sinl_string_copy
 sinl_string_copy:
     ; copies a string from one location to another
     ; parameters:
-    ;   ptr<string> src     -   the source string
-    ;   ptr<string> dest    -   the destination string
+    ;   RSI     -   the source string
+    ;   RDI     -   the destination string
     ; returns:
-    ;   ptr<string>     -   The address of the destination string
+    ;   The address of the destination string
     ;
     ; According to the SIN calling convention, 'src' will be in RSI and 'dest' will be in RDI
     ; 
@@ -124,80 +123,47 @@ sinl_string_concat:
     ; parameters:
     ;   RSI     -   the left-hand string
     ;   RDI     -   the right-hand string
+    ;   CL      -   whether the string can be concatenated directly (1) or requires a new string (0)
     ; returns:
-    ;   RAX     -   a pointer to the resultant string (usually just the data buffer)
+    ;   A pointer to the resultant string (usually just the data buffer)
     ;
-
-    ; Calculate length of the resultant string
+    
+    ; Get the length of the resultant string
     mov eax, [rsi]
     add eax, [rdi]
-    push rax    ; preserve the length
-    add eax, base_string_width  ; add the base width to determine actual memory footprint
+    add eax, base_string_width
 
-    ; Request a reallocation -- does nothing if a reallocation is not needed
-    mov r12, rsi
-    mov r13, rdi    ; preserve RSI and RDI
+    ; Request a new resource from the MAM
+    mov r12, rsi    ; preserve LHS in r12
+    mov r13, rdi    ; preserve RHS in r13
+    mov edi, eax    ; Length in EDI
+    mov esi, 0      ; Not a fixed resource
+    call sre_request_resource
 
-    lea rbx, [rel sinl_str_buffer] ; move the address of the buffer in
-    mov rdi, [rbx]
-    mov esi, eax
-    call sre_reallocate    ; returns the new address
-
-    ; assign the string buffer pointer
-    lea rbx, [rel sinl_str_buffer]
-    mov [rbx], rax
-
-    ; if the LHS is the string buffer, we can just adjust the string's length and copy the second string in
-    ; note we don't need to worry about whether or not the buffer was reallocated, as a reallocation will automatically copy the old data into the new location
-    cld ; clear the direction flag for 'rep' (just in case)
-    pop rcx ; restore the total length
-    lea rbx, [rel sinl_str_buffer] ; compare addresses
-    cmp r12, [rbx]
-    jne .full_copy
-
-.adjust_buffer:
-    ; adjust the length
-    lea rbx, [rel sinl_str_buffer]
-    mov rdi, [rbx]
-    mov eax, [rdi]  ; get the length of the first string
-    mov [rdi], ecx  ; adjust the string length
-    ; add the length of the data dword and the first string to get the proper address
-    add rdi, 4
-    add rdi, rax
-    ; now, copy the second string
-    jmp .copy_second
-.full_copy:
-    ; Perform the full concatenation
-    lea rbx, [rel sinl_str_buffer]
-    mov rdi, [rbx]
-    mov [rdi], ecx  ; move the combined length in
-    add rdi, 4  ; increment RDI to contain a pointer to the first byte of the string data (where we want to copy in)
-
+    ; Resource address is in RAX; preserve it
+    push rax
+    
     ; Copy the first string in
-    mov rsi, r12    ; restore the first string address
-    mov ecx, [rsi]  ; get the length of the first string
-    add rsi, 4  ; skip the length
-    rep movsb
-.copy_second:
-    ; And now the second string
-    mov rsi, r13    ; restore the source of the right-hand string
-    mov ecx, [rsi]  ; get the length of the second string
-    add rsi, 4  ; skip the length
-                ; note that RDI, no matter which direction we took, contains the address to write to next
-                ; as such, we don't need to adjust it
+    mov rdi, rax
+    mov rsi, r12
+    mov ecx, [rsi]
+    add ecx, 4      ; ensure we copy in the length dword (but not the null byte)
     rep movsb
 
-    ; now, append a null byte
-    lea rbx, [rel sinl_str_buffer]
-    mov rbx, [rbx]
-    mov ecx, [rbx]
-    add ecx, 4  ; ensure we skip the length dword
-    mov al, 0
-    mov [rbx + rcx], al
+    ; Copy in the second string
+    ; We need to add the lengths together and figure out the destination
+    ; RSI and RDI have been incremented accordingly; we want to keep RDI
+    mov r12, [rsp]
+    mov eax, [r13]  ; get the length of the RHS string
+    add [r12], eax  ; add it to the length in the destination
+    mov rsi, r13    ; move the RHS into RSI
+    mov ecx, [rsi]  ; get its length in ECX
+    add ecx, 1      ; ensure we account for the null byte
+    add rsi, 4      ; ensure we skip the length dword
+    rep movsb
 
-    ; return the address of the buffer
-    lea rax, [rel sinl_str_buffer]
-    mov rax, [rax]
+    ; Get the original address back and return
+    pop rax
     ret
 
 global sinl_string_append
@@ -205,54 +171,40 @@ sinl_string_append:
     ; appends a single character to a string
     ; this is like concatenation, and the string will be located on the buffer
     ; parameters:
-    ;   RSI     -   The string to which we are appending
+    ;   RSI     -   The address of the string to which we are appending
     ;   DIL     -   The character to append
     ; returns:
     ;   RAX     -   a pointer to the string buffer
     ;
 
-    ; move the character into r12 and reallocate the buffer if necessary
+    ; preserve our registers; we need to allocate memory
     mov r12b, dil
     mov r13, rsi
+
+    ; request the resource
+    mov edi, [rsi]
+    add edi, base_string_width + 1  ; account for the new character, width, null byte
+    mov esi, 0  ; the resource is not fixed
+    call sre_request_resource
     
-    ; get the destination
-    lea rbx, [rel sinl_str_buffer]
-    mov rdi, [rbx]
-
-    ; get the new length
-    mov esi, [rsi]
-    add esi, 4
-    inc esi
-
-    ; call the function
-    call sre_reallocate
-
-    ; update the address in the string buffer pointer
-    lea rbx, [rel sinl_str_buffer]
-    mov [rbx], rax
-
-    ; update our source and destinations
+    ; copy the string over
     mov rdi, rax
     mov rsi, r13
-
-    ; copy onto the buffer
-.copy:
     mov ecx, [rsi]
-    add ecx, 4	; since the width of each element is 1, we can just add the array length
+    add ecx, 4
     rep movsb
 
-    ; append the character
-.append:
+    ; append the character and a null byte
     mov rsi, rax
-    mov ebx, [rsi]  ; index should be the last character
-    inc dword [rsi] ; now increment the string length
-    add rsi, rbx    ; skip to the proper index
-    add rsi, 4  ; skip the length
+    mov ebx, [rsi]
+    inc dword [rsi]
+    add rsi, rbx
+    add rsi, 4
     mov [rsi], r12b
     inc rsi
     mov bl, 0
     mov [rsi], bl
-
+    
     ret
 
 global sinl_string_copy_construct
@@ -261,7 +213,7 @@ sinl_string_copy_construct:
     ; Equivalent to a C++ copy constructor
     ; Parameters are:
     ;   RSI -   The address of the initial string value
-    ;   RDI -   The address where we are storing this reference
+    ;   RDI -   The address where we are storing the reference
     ; This function returns no values, calling an SRE panic function if there was an error
     ;
 

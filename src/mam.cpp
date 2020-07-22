@@ -178,7 +178,7 @@ void mam::free_resource(uintptr_t key, bool force_free) {
     std::unordered_map<uintptr_t, node>::iterator it = this->resources.find(key);
     if (it == this->resources.end()) {
         // if the resource could not be found, the manager should ignore it
-	    printf("Resource not found\n");
+	    // printf("Resource not found\n");  // for debug only
         return;
     } else if (!it->second.fixed() || force_free) { // we can only free if it's not a fixed resource OR we are forcing a free
         node *n = &it->second;
@@ -193,6 +193,9 @@ void mam::free_resource(uintptr_t key, bool force_free) {
             it = this->resources.end();
             this->resources.erase(key);
         }
+    }
+    else if (it->second.fixed()) {
+        //printf("Trying to free fixed resource; ignoring\n");  // for debug only
     }
 }
 

@@ -22,7 +22,6 @@
 
         ; data
         extern manager
-        extern sinl_str_buffer
 
         ; SRE functions
 	extern sinl_rte_index_out_of_bounds

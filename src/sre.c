@@ -11,13 +11,11 @@ This file contains the implementation of the SIN runtime environment.
 
 void sre_init() {
     manager = new_mam();    // allocate the MAM
-    sinl_str_buffer = (char*)sre_request_resource(134, true);   // use the MAM to request a 128-character string buffer
 }
 
 void sre_clean() {
     delete_mam(manager);    // delete the MAM
     manager = NULL;
-    sinl_str_buffer = NULL;
 }
 
 /*
