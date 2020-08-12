@@ -1,9 +1,19 @@
 # Makefile
 # Builds the SRE
 
+# Get the name of the OS so we can ensure we build properly
+os_name := $(shell uname)
+
 # Assembly macros
 asm=nasm
-asm_flags=-g -f elf64
+asm_flags=-g
+ifeq ($(os_name), Linux)
+	asm_flags += -f elf64
+endif
+ifeq ($(os_name), Darwin)
+	asm_flags += -f macho64
+endif
+# todo: more checks to make this OS-agnostic
 
 # C macros
 cc=gcc
@@ -11,7 +21,7 @@ cflags=-g -Wall -fPIC
 
 # C++ macros
 cpp=g++
-cpp_version=c++17
+cpp_version=c++14
 cppflags=-std=$(cpp_version) -g -Wall -fPIC
 
 # General makefile macros
