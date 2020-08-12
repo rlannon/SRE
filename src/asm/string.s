@@ -10,8 +10,8 @@
 %define base_string_width 5
 
 ; Declare our external routines and data
-extern sre_request_resource
-extern sre_reallocate
+extern _sre_request_resource
+extern _sre_reallocate
 
 global sinl_string_alloc
 sinl_string_alloc:
@@ -32,7 +32,16 @@ sinl_string_alloc:
     mov edi, default_string_length
     add edi, base_string_width
     mov si, 0   ; it's not a fixed resource
-    call sre_request_resource
+
+    ; align the stack to 16 bytes before a call to a C function
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_request_resource
+    add rsp, 8
+    pop rsp
+
     ; RAX now contains the address of the string (the return value)
     jmp .done
 .known:
@@ -47,12 +56,21 @@ sinl_string_alloc:
     add edi, esi
     add edi, base_string_width
     mov esi, 0  ; it's not a fixed resource
-    call sre_request_resource
+
+    ; align the stack to 16 bytes
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_request_resource
+    add rsp, 8
+    pop rsp
 .done:
     mov [rax], dword 0    ; move 0 into the string length, as it is empty
     mov rbx, rax
     add rbx, 4
     mov [rbx], byte 0    ; move a null byte into the first byte of the string
+
     ret
 
 global sinl_string_copy
@@ -96,7 +114,15 @@ sinl_string_copy:
 
     ; pass addresses -- the string to reallocate is already in rdi
     mov esi, eax
-    call sre_reallocate
+
+    ; first, align the stack to 16 bytes
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_reallocate
+    add rsp, 8
+    pop rsp
 
     ; restore pointer values
     mov rsi, r12
@@ -127,7 +153,7 @@ sinl_string_concat:
     ; returns:
     ;   A pointer to the resultant string (usually just the data buffer)
     ;
-    
+
     ; Get the length of the resultant string
     mov eax, [rsi]
     add eax, [rdi]
@@ -138,7 +164,15 @@ sinl_string_concat:
     mov r13, rdi    ; preserve RHS in r13
     mov edi, eax    ; Length in EDI
     mov esi, 0      ; Not a fixed resource
-    call sre_request_resource
+
+    ; align the stack to a 16-byte boundary
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_request_resource
+    add rsp, 8
+    pop rsp
 
     ; Resource address is in RAX; preserve it
     push rax
@@ -185,7 +219,15 @@ sinl_string_append:
     mov edi, [rsi]
     add edi, base_string_width + 1  ; account for the new character, width, null byte
     mov esi, 0  ; the resource is not fixed
-    call sre_request_resource
+
+    ; align to a 16-byte boundary before the call
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_request_resource
+    add rsp, 8
+    pop rsp
     
     ; copy the string over
     mov rdi, rax

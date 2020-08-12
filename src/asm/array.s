@@ -9,9 +9,9 @@
 %define base_array_width 4
 
 ; External functions and data
-extern sre_request_resource
-extern sre_reallocate
-extern sre_get_size
+extern _sre_request_resource
+extern _sre_reallocate
+extern _sre_get_size
 
 global sinl_dynamic_array_alloc
 sinl_dynamic_array_alloc:
@@ -40,7 +40,16 @@ sinl_dynamic_array_alloc:
     mov rdi, 0x10
 .allocate:
     mov si, 0
-    call sre_request_resource
+
+    ; ensure stack alignment before calling a C function
+    mov rax, rsp
+    and rsp, -0x10
+    push rax
+    sub rsp, 8
+    call _sre_request_resource
+    add rsp, 8
+    pop rsp
+
     ret
 
 global sinl_array_copy

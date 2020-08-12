@@ -9,33 +9,33 @@
 
 %ifndef ASM_INCLUDE
     %define ASM_INCLUDE
-        ; string routines
+        ; assembly string routines
         extern sinl_string_alloc
         extern sinl_string_copy
         extern sinl_string_concat
         extern sinl_string_append
 	extern sinl_string_copy_construct
 
-        ; array routines
+        ; assembly array routines
         extern sinl_dynamic_array_alloc
         extern sinl_array_copy
 
         ; data
-        extern manager
+        extern _manager
 
-        ; SRE functions
-	extern sinl_rte_index_out_of_bounds
+        ; SRE error functions
+	extern _sinl_rte_index_out_of_bounds
 
         ; SRE MAM interaction
-        extern sre_request_resource
-        extern sre_reallocate
-        extern sre_mam_contains
-        extern sre_get_rc
-        extern sre_get_size
-        extern sre_add_ref
-        extern sre_free
+        extern _sre_request_resource
+        extern _sre_reallocate
+        extern _sre_mam_contains
+        extern _sre_get_rc
+        extern _sre_get_size
+        extern _sre_add_ref
+        extern _sre_free
 
         ; SRE init/cleanup
-        extern sre_init
-        extern sre_clean
+        extern _sre_init
+        extern _sre_clean
 %endif
