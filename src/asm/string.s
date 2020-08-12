@@ -48,6 +48,7 @@ sinl_string_alloc:
     ; a known initial length
     ; multiply by 1.5 to avoid reallocation if the length is adjusted
     push rsi    ; preserve RSI
+    mov eax, esi
     mov edx, 0
     mov ecx, 2
     div ecx

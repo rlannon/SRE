@@ -44,6 +44,9 @@ $(target): $(sre_dependencies)
 	rm *.o
 	@echo "Done."
 
+# todo: put sre.c in separate object here, like mam, array, and string? or keep in whole build?
+
+# MAM
 mam.o: mam.h mam.cpp runtime_error_codes.h
 	$(cpp) $(cppflags) -o mam.o -c mam.cpp
 
