@@ -8,10 +8,10 @@
 ; Macros for constants
 %define base_array_width 4
 
+%include "asm_macros.s"
+
 ; External functions and data
-extern _sre_request_resource
-extern _sre_reallocate
-extern _sre_get_size
+extern %[SRE_REQUEST_RESOURCE]
 
 global sinl_dynamic_array_alloc
 sinl_dynamic_array_alloc:
@@ -46,7 +46,7 @@ sinl_dynamic_array_alloc:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_request_resource
+    call %[SRE_REQUEST_RESOURCE]
     add rsp, 8
     pop rsp
 

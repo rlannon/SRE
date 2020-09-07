@@ -9,9 +9,11 @@
 %define default_string_length    15
 %define base_string_width 5
 
+%include "asm_macros.s"
+
 ; Declare our external routines and data
-extern _sre_request_resource
-extern _sre_reallocate
+extern %[SRE_REQUEST_RESOURCE]
+extern %[SRE_REALLOCATE]
 
 global sinl_string_alloc
 sinl_string_alloc:
@@ -38,7 +40,7 @@ sinl_string_alloc:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_request_resource
+    call %[SRE_REQUEST_RESOURCE]
     add rsp, 8
     pop rsp
 
@@ -63,7 +65,7 @@ sinl_string_alloc:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_request_resource
+    call %[SRE_REQUEST_RESOURCE]
     add rsp, 8
     pop rsp
 .done:
@@ -121,7 +123,7 @@ sinl_string_copy:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_reallocate
+    call %[SRE_REALLOCATE]
     add rsp, 8
     pop rsp
 
@@ -171,7 +173,7 @@ sinl_string_concat:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_request_resource
+    call %[SRE_REQUEST_RESOURCE]
     add rsp, 8
     pop rsp
 
@@ -226,7 +228,7 @@ sinl_string_append:
     and rsp, -0x10
     push rax
     sub rsp, 8
-    call _sre_request_resource
+    call %[SRE_REQUEST_RESOURCE]
     add rsp, 8
     pop rsp
     

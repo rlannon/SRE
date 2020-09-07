@@ -52,10 +52,10 @@ mam.o: mam.h mam.cpp runtime_error_codes.h
 
 # Assembly
 array.o: asm/array.s
-	$(asm) $(asm_flags) asm/array.s -o array.o
+	$(asm) $(asm_flags) asm/array.s -o array.o -i asm/
 
 string.o: asm/string.s
-	$(asm) $(asm_flags) asm/string.s -o string.o
+	$(asm) $(asm_flags) asm/string.s -o string.o -i asm/
 
 # Clean-up
 clean:

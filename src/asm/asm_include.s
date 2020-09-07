@@ -7,6 +7,8 @@
 ;   program access to the SRE. The SRE should then be statically linked with
 ;   the assembled file to produce the executable.
 
+%include "asm_macros.s"
+
 %ifndef ASM_INCLUDE
     %define ASM_INCLUDE
         ; assembly string routines
@@ -14,28 +16,28 @@
         extern sinl_string_copy
         extern sinl_string_concat
         extern sinl_string_append
-	extern sinl_string_copy_construct
+	    extern sinl_string_copy_construct
 
         ; assembly array routines
         extern sinl_dynamic_array_alloc
         extern sinl_array_copy
 
         ; data
-        extern _manager
+        extern %[MANAGER]
 
         ; SRE error functions
-	extern _sinl_rte_index_out_of_bounds
+	    extern %[SINL_RTE_OUT_OF_BOUNDS]
 
         ; SRE MAM interaction
-        extern _sre_request_resource
-        extern _sre_reallocate
-        extern _sre_mam_contains
-        extern _sre_get_rc
-        extern _sre_get_size
-        extern _sre_add_ref
-        extern _sre_free
+        extern %[SRE_REQUEST_RESOURCE]
+        extern %[SRE_REALLOCATE]
+        extern %[SRE_MAM_CONTAINS]
+        extern %[SRE_GET_RC]
+        extern %[SRE_GET_SIZE]
+        extern %[SRE_ADD_REF]
+        extern %[SRE_FREE]
 
         ; SRE init/cleanup
-        extern _sre_init
-        extern _sre_clean
+        extern %[SRE_INIT]
+        extern %[SRE_CLEAN]
 %endif
