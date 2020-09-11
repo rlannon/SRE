@@ -79,9 +79,9 @@ sinl_array_copy:
     mov eax, ebx
 .copy:
     ; multiply the number of elements (eax) by the width of those elements (ecx)
-    ; afterwards, move the result into RCX to get the number of bytes
-    mul rcx
-    mov rcx, rax
+    ; afterwards, move the result into ECX to get the number of bytes
+    mul ecx
+    mov ecx, eax
 
     ; increment the pointers to skip the length word
     add rsi, 4
