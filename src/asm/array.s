@@ -17,8 +17,8 @@ global sinl_dynamic_array_alloc
 sinl_dynamic_array_alloc:
     ; Allocates an array in dynamic memory
     ; Parameters:
-    ;   int &unsigned width     -   The width of the contained type
-    ;   int &unsigned length    -   The number of elements to be allocated
+    ;   RSI: int &unsigned width    -   The width of the contained type
+    ;   RDI: int &unsigned length   -   The number of elements to be allocated
     ;
     ; This will allocate at least 16 bytes for the array, else 1.5x the initial length
     ;
